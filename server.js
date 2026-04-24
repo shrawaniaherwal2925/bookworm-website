@@ -84,15 +84,16 @@ app.get('/api/books/:id', (req, res) => {
 
 // 4. UPLOAD A BOOK (status = 'pending')
 app.post('/api/upload', (req, res) => {
-    const { title, author, genre, pdf_path, uploaded_by } = req.body;
-    if (!title || !author || !genre || !pdf_path || !uploaded_by) {
-        return res.status(400).json({ success: false, message: 'All fields are required!' });
+    const { title, author, genre, pdf_path } = req.body;
+    if (!title || !author || !genre) {
+        return res.status(400).json({ success: false, message: 'Title, author and genre are required!' });
     }
+    const pdfPath = pdf_path || 'pending.pdf';
     const query = `
-        INSERT INTO books (title, author, genre, pdf_path, uploaded_by, status)
-        VALUES (?, ?, ?, ?, ?, 'pending')
+        INSERT INTO books (title, author, genre, pdf_path, status)
+        VALUES (?, ?, ?, ?, 'pending')
     `;
-    db.query(query, [title, author, genre, pdf_path, uploaded_by], (err, result) => {
+    db.query(query, [title, author, genre, pdfPath], (err, result) => {
         if (err) return handleDbError(res, err, 'Failed to upload book');
         res.status(201).json({
             success: true,
