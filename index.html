@@ -1650,7 +1650,7 @@
             if (!pass) { showError('loginPassword', 'Required'); valid = false; } else clearError('loginPassword');
 
             if (valid) {
-                fetch('http://localhost:3000/api/login', {
+                fetch('/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1729,7 +1729,7 @@
                 btn.innerText = "Creating...";
                 btn.disabled = true;
 
-                fetch('http://127.0.0.1:3000/api/register', {
+                fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: name, email: email, password: pass })
@@ -2310,7 +2310,7 @@
 
         async function approveBook(id) {
             try {
-                const response = await fetch(`http://127.0.0.1:3000/api/approve/${id}`, {
+                const response = await fetch(`/api/approve/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ approved_by: 1 })
@@ -2387,7 +2387,7 @@
                 uploaded_by: "User"
             };
             try {
-                const response = await fetch('http://127.0.0.1:3000/api/upload', {
+                const response = await fetch('/api/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -2415,7 +2415,7 @@
         // ================= BACKEND CONNECTION =================
         async function loadBackendData() {
             try {
-                const booksRes = await fetch('http://127.0.0.1:3000/api/books');
+                const booksRes = await fetch('/api/books');
                 const books = await booksRes.json();
 
                 if (books.success && books.data && books.data.length > 0) {
@@ -2443,7 +2443,7 @@
                     booksData = [...booksData, ...newBooks];
                 }
 
-                const reviewsRes = await fetch('http://127.0.0.1:3000/api/reviews/1');
+                const reviewsRes = await fetch('/api/reviews/1');
                 const reviews = await reviewsRes.json();
 
                 if (reviews.success && reviews.data) {
@@ -2460,7 +2460,7 @@
                     }));
                 }
 
-                const pendingRes = await fetch('http://127.0.0.1:3000/api/pending');
+                const pendingRes = await fetch('/api/pending');
                 const pending = await pendingRes.json();
                 if (pending.success && pending.data) {
                     pendingBooks = pending.data.map(b => ({
