@@ -1,0 +1,2500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookWorm - Book Reviews & Recommendations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-primary: #f59e0b;
+            --border-color: #334155;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Page Visibility Logic */
+        .auth-page {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .auth-page.active {
+            display: flex;
+        }
+
+        .app-shell {
+            display: none;
+        }
+
+        .app-shell.active {
+            display: block;
+        }
+
+        .content-page {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .content-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-right: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 1rem 1.5rem 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 0.875rem 1.5rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            background: none;
+            width: 100%;
+            border: none;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--accent-primary);
+            border-left-color: var(--accent-primary);
+        }
+
+        .nav-link svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-mini-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--bg-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .search-bar {
+            position: relative;
+            max-width: 500px;
+            flex: 1;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .search-bar svg {
+            position: absolute;
+            left: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* Components */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-secondary.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+        }
+
+        .btn-ghost:hover {
+            color: var(--error);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .form-input.error {
+            border-color: var(--error);
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 0.5rem;
+            font-size: 0.8125rem;
+            color: var(--error);
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        /* Auth Specifics */
+        .auth-container {
+            flex: 1;
+            display: flex;
+        }
+
+        .auth-visual {
+            flex: 1;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-visual::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        .auth-visual-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .auth-form-container {
+            flex: 1;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem;
+            overflow-y: auto;
+        }
+
+        /* Cards & Grid */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            cursor: pointer;
+        }
+
+        .book-cover {
+            width: 100%;
+            aspect-ratio: 2/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            position: relative;
+        }
+
+        .book-cover-text {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 2rem 1rem 1rem;
+        }
+
+        .book-info {
+            padding: 1rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(51, 65, 85, 0.5) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Star Rating */
+        .star-rating {
+            display: inline-flex;
+            flex-direction: row;
+            gap: 4px;
+        }
+
+        .star {
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .star svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--border-color);
+            transition: fill 0.15s ease;
+            stroke: none;
+        }
+
+        .star.active svg {
+            fill: var(--accent-primary);
+        }
+
+        .star:hover svg {
+            fill: var(--accent-primary);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s ease;
+        }
+
+        .modal-large {
+            max-width: 900px;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        /* Book Detail Tabs */
+        .book-tabs-container {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            overflow-x: auto;
+        }
+
+        .book-tab-btn {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .book-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .book-tab-btn.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .book-tab-content {
+            display: none;
+            padding: 2rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .book-tab-content.active {
+            display: block;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-pill strong {
+            color: var(--text-primary);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        /* Misc */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: toastIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--error);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+        }
+
+        .list-item-cover {
+            width: 50px;
+            height: 75px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .auth-visual {
+                display: none;
+            }
+
+            .auth-form-container {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .profile-header-container {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+
+            .profile-tabs-container {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="auth-page active">
+        <div class="auth-container">
+            <div class="auth-visual">
+                <div class="auth-visual-content">
+                    <div class="logo mb-8">
+                        <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            </svg></div>BookWorm
+                    </div>
+                    <h2 class="font-display text-3xl mb-4">Discover Your Next Great Read</h2>
+                    <p class="text-[var(--text-secondary)] text-lg">Join thousands of book lovers.</p>
+                </div>
+            </div>
+            <div class="auth-form-container">
+                <div style="margin-bottom: 2rem;">
+                    <h1 class="font-display text-2xl">Welcome Back</h1>
+                    <p class="text-[var(--text-secondary)]">Sign in to continue</p>
+                </div>
+                <form id="loginForm" novalidate>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="loginName" class="form-input" placeholder="Enter your name">
+                        <div class="error-message" id="loginNameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email">
+                        <div class="error-message" id="loginEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password">
+                        <div class="error-message" id="loginPasswordError"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mb-4">Sign In</button>
+                    <p class="text-center text-sm text-[var(--text-secondary)]">Don't have an account?
+                        <a href="javascript:void(0)" onclick="showAuthPage('register')"
+                            class="text-[var(--accent-primary)] hover:underline">Create one</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- REGISTER PAGE -->
+    <div id="registerPage" class="auth-page">
+        <div class="auth-container">
+            <div class="auth-visual">
+                <div class="auth-visual-content">
+                    <div class="logo mb-8">
+                        <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            </svg></div>BookWorm
+                    </div>
+                    <h2 class="font-display text-3xl mb-4">Start Your Adventure</h2>
+                </div>
+            </div>
+            <div class="auth-form-container">
+                <div style="margin-bottom: 2rem;">
+                    <h1 class="font-display text-2xl">Create Account</h1>
+                    <p>Join our community</p>
+                </div>
+                <form id="registerForm" novalidate>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="registerName" class="form-input" placeholder="Enter your name">
+                        <div class="error-message" id="registerNameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="Enter your email">
+                        <div class="error-message" id="registerEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password">
+                        <div class="error-message" id="registerPasswordError"></div>
+                        <p class="text-xs text-[var(--text-muted)] mt-1">Min 8 chars, 1 uppercase, 1 number</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="registerConfirmPassword" class="form-input"
+                            placeholder="Confirm password">
+                        <div class="error-message" id="registerConfirmPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="agreeTerms" class="w-4 h-4 rounded">
+                            <span class="text-sm text-[var(--text-secondary)]">I agree to the <a href="#"
+                                    class="text-[var(--accent-primary)]">Terms</a></span>
+                        </label>
+                        <div class="error-message" id="agreeTermsError"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mb-4">Create Account</button>
+                    <p class="text-center text-sm text-[var(--text-secondary)]">Already have an account?
+                        <a href="javascript:void(0)" onclick="showAuthPage('login')"
+                            class="text-[var(--accent-primary)] hover:underline">Sign in</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- APPLICATION SHELL -->
+    <div id="appShell" class="app-shell">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg></div>BookWorm
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-section-title">Main Menu</div>
+                <button class="nav-link active" onclick="navigateTo('dashboard')"><svg viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="9" rx="1" />
+                        <rect x="14" y="3" width="7" height="5" rx="1" />
+                        <rect x="14" y="12" width="7" height="9" rx="1" />
+                        <rect x="3" y="16" width="7" height="5" rx="1" />
+                    </svg>Dashboard</button>
+                <button class="nav-link" onclick="navigateTo('books')"><svg viewBox="0 0 24 24">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>Browse Books</button>
+                <button class="nav-link" onclick="navigateTo('reviews')"><svg viewBox="0 0 24 24">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>Reviews</button>
+                <button class="nav-link" onclick="navigateTo('recommendations')"><svg viewBox="0 0 24 24">
+                        <path
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>For You</button>
+
+                <!-- Admin Link -->
+                <div class="nav-section-title">Administration</div>
+                <button class="nav-link" onclick="navigateTo('admin')"><svg
+                        viewBox="0 0 24 24">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>Admin Panel</button>
+
+                <div class="nav-section-title">Account</div>
+                <button class="nav-link" onclick="navigateTo('profile')"><svg viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>Profile</button>
+                <button class="nav-link" onclick="navigateTo('about')"><svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>Help & About</button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-mini-profile">
+                    <div class="user-avatar-small" id="sidebarAvatar">JD</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate" id="sidebarUserName">User</div>
+                        <div class="text-xs text-[var(--text-muted)] truncate" id="sidebarUserEmail">email@example.com
+                        </div>
+                    </div>
+                    <button class="btn p-2" style="color:var(--text-muted); background:none;" onclick="logout()"><svg
+                            width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg></button>
+                </div>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main id="mainContent" class="main-content">
+            <header class="top-bar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()"><svg width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg></button>
+                <div class="search-bar"><svg viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg><input type="text" placeholder="Search books by title or author..." id="globalSearch"></div>
+            </header>
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="content-page active">
+                <div style="padding:2rem; border-bottom:1px solid var(--border-color);">
+                    <h1 class="font-display text-2xl" id="dashboardGreeting">Welcome back</h1>
+                    <p class="text-[var(--text-secondary)]">Here's your reading journey</p>
+                </div>
+                <div class="p-6">
+                    <div class="stats-grid mb-8">
+                        <div class="stat-card" onclick="showListModal('read')">
+                            <div class="stat-value" id="booksReadCount">0</div>
+                            <div class="stat-label">Books Read</div>
+                        </div>
+                        <div class="stat-card" onclick="showListModal('reviews')">
+                            <div class="stat-value" id="reviewsWrittenCount">0</div>
+                            <div class="stat-label">Reviews Written</div>
+                        </div>
+                        <div class="stat-card" onclick="showListModal('liked')">
+                            <div class="stat-value" id="booksLikedCount">0</div>
+                            <div class="stat-label">Books Liked</div>
+                        </div>
+                    </div>
+                    <h2 class="font-display text-xl mb-4">Recent Reviews</h2>
+                    <div id="dashboardReviews"></div>
+                </div>
+            </div>
+            <!-- Browse Books Page -->
+            <div id="booksPage" class="content-page">
+                <div
+                    style="padding:2rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h1 class="font-display text-2xl">Browse Books</h1>
+                        <p class="text-[var(--text-secondary)]">Discover your next favorite read</p>
+                    </div>
+                    <!-- NEW: Add Book Button -->
+                    <button class="btn btn-primary" onclick="openModal('submitBookModal')">Add New Book</button>
+                </div>
+                <div class="p-6">
+                    <div class="flex flex-wrap gap-3 mb-6" id="genreFilters">
+                        <button class="btn btn-secondary active" onclick="filterBooks('All')">All</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Fiction')">Fiction</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Non-Fiction')">Non-Fiction</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Mystery')">Mystery</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Sci-Fi')">Sci-Fi</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Thriller')">Thriller</button>
+                        <button class="btn btn-secondary" onclick="filterBooks('Self-Help')">Self-Help</button>
+                    </div>
+                    <div class="books-grid" id="booksGrid"></div>
+                </div>
+            </div>
+            <!-- Reviews Page -->
+            <div id="reviewsPage" class="content-page">
+                <div
+                    style="padding:2rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                    <h1 class="font-display text-2xl">Reviews</h1>
+                    <button class="btn btn-primary" onclick="openReviewModal()">Write a Review</button>
+                </div>
+                <div class="p-6">
+                    <div id="reviewsList"></div>
+                </div>
+            </div>
+            <!-- Recommendations Page -->
+            <div id="recommendationsPage" class="content-page">
+                <div style="padding:2rem; border-bottom:1px solid var(--border-color);">
+                    <h1 class="font-display text-2xl">For You</h1>
+                </div>
+                <div class="p-6">
+                    <div id="recommendationsList"></div>
+                </div>
+            </div>
+
+            <!-- NEW: Admin Page -->
+            <div id="adminPage" class="content-page">
+                <div style="padding:2rem; border-bottom:1px solid var(--border-color);">
+                    <h1 class="font-display text-2xl">Admin Panel</h1>
+                    <p class="text-[var(--text-secondary)]">Manage book submissions and platform settings</p>
+                </div>
+                <div class="p-6">
+                    <div class="stats-grid mb-8">
+                        <div class="stat-card">
+                            <div class="stat-value" id="pendingCount">0</div>
+                            <div class="stat-label">Pending Books</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalBooksCount">0</div>
+                            <div class="stat-label">Total Books</div>
+                        </div>
+                    </div>
+                    <h2 class="font-display text-xl mb-4">Pending Submissions</h2>
+                    <div id="pendingBooksList"></div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profilePage" class="content-page">
+                <div class="p-6 border-b border-[var(--border-color)]">
+                    <div class="profile-header-container"
+                        style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+                        <div class="user-avatar-small" style="width:80px; height:80px; font-size:2rem;"
+                            id="profileAvatar">JD</div>
+                        <div style="flex:1; min-width: 200px;">
+                            <h1 class="font-display text-2xl" id="profileName">User</h1>
+                            <p class="text-[var(--text-secondary)]" id="profileEmail">email</p>
+                            <div id="profileGenres" class="flex flex-wrap gap-2 mt-2"></div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openEditProfileModal()">Edit Profile</button>
+                    </div>
+                </div>
+                <div class="profile-tabs-container flex gap-2 p-4 border-b border-[var(--border-color)]"
+                    style="overflow-x:auto;">
+                    <button class="btn btn-secondary active" onclick="switchProfileTab('overview')">Overview</button>
+                    <button class="btn btn-secondary" onclick="switchProfileTab('reading')">Reading List</button>
+                    <button class="btn btn-secondary" onclick="switchProfileTab('myreviews')">My Reviews</button>
+                    <button class="btn btn-secondary" onclick="switchProfileTab('settings')">Settings</button>
+                    <button class="btn btn-secondary" onclick="openModal('submitBookModal')">Upload Books</button>
+                </div>
+                <div class="p-6">
+                    <div id="profileOverview"></div>
+                    <div id="profileReadingList" style="display:none;"></div>
+                    <div id="profileMyReviews" style="display:none;"></div>
+                    <div id="profileSettings" style="display:none;"></div>
+                </div>
+            </div>
+            <!-- About Page -->
+            <div id="aboutPage" class="content-page">
+                <div style="padding:2rem; border-bottom:1px solid var(--border-color);">
+                    <h1 class="font-display text-2xl">Help & About</h1>
+                </div>
+                <div class="p-6 max-w-3xl mx-auto">
+                    <div class="card p-6 mb-6">
+                        <h2 class="font-display text-xl mb-4">About BookWorm</h2>
+                        <p class="text-[var(--text-secondary)]">A platform for book lovers to discover, review, and
+                            share their favorite reads.</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-[var(--text-secondary)] mb-4">Contact support.</p><a
+                            href="mailto:itteam@mmcoe.in" class="btn btn-primary">Contact: itteam@mmcoe.in</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Book Preview Modal -->
+    <div class="modal-overlay" id="bookPreviewModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="font-display text-lg" id="previewTitle">Book Title</h3>
+                <button class="modal-close" onclick="closeModal('bookPreviewModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="previewContent"></div>
+        </div>
+    </div>
+
+    <!-- NEW: Submit Book Modal -->
+    <div class="modal-overlay" id="submitBookModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="font-display text-lg">Add New Book</h3>
+                <button class="modal-close" onclick="closeModal('submitBookModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+                <form id="submitBookForm">
+                    <div class="form-group">
+                        <label class="form-label">Book Title</label>
+                        <input type="text" id="submitTitle" class="form-input" placeholder="Enter book title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Author</label>
+                        <input type="text" id="submitAuthor" class="form-input" placeholder="Enter author name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Genre</label>
+                        <select id="submitGenre" class="form-input" required>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Mystery">Mystery</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="Self-Help">Self-Help</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="submitDesc" class="form-input" rows="3" placeholder="Brief description"
+                            required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">PDF Link (Optional)</label>
+                        <input type="text" id="submitLink" class="form-input" placeholder="Link to PDF or Filename">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Submit for Approval</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="listModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="font-display text-lg" id="listModalTitle">List</h3><button class="modal-close"
+                    onclick="closeModal('listModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="listModalContent"></div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="font-display text-lg">Write a Review</h3><button class="modal-close"
+                    onclick="closeModal('reviewModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+                <form id="reviewForm" novalidate>
+                    <div class="form-group"><label class="form-label">Select Book</label><select class="form-input"
+                            id="reviewBookSelect"></select></div>
+                    <div class="form-group"><label class="form-label">Rating</label>
+                        <div class="star-rating" id="reviewStarRating"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Title</label><input type="text" id="reviewTitle"
+                            class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Review</label><textarea id="reviewText"
+                            class="form-input" rows="4"></textarea></div><button type="submit"
+                        class="btn btn-primary w-full">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="font-display text-lg">Edit Profile</h3><button class="modal-close"
+                    onclick="closeModal('editProfileModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+                <form id="editProfileForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group"><label class="form-label">Name</label><input type="text" id="editName"
+                                class="form-input"></div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email"
+                                id="editEmail" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">Contact</label><input type="text"
+                                id="editContact" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">Age</label><input type="number" id="editAge"
+                                class="form-input"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Favorite Genres</label><select id="editGenres"
+                            class="form-input" multiple style="height:100px;">
+                            <option value="Fiction">Fiction</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                        </select></div><button type="submit" class="btn btn-primary w-full mt-4">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="font-display text-lg">Change Password</h3><button class="modal-close"
+                    onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:1.5rem;">
+                <form id="passwordForm">
+                    <div class="form-group"><label class="form-label">Current Password</label><input type="password"
+                            id="currentPass" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">New Password</label><input type="password"
+                            id="newPass" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">Confirm Password</label><input type="password"
+                            id="confirmPass" class="form-input"></div>
+                    <div class="error-message mb-4" id="passwordError" style="display:none; color:var(--error);"></div>
+                    <button type="submit" class="btn btn-primary w-full">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ========== DATA ==========
+        let booksData = [
+            // Fiction
+            {
+                id: 1,
+                title: "Bell Rock",
+                author: "Joseph Carletonbeal",
+                rating: 4.0,
+                genre: "Fiction",
+                color: "#3b82f6",
+                desc: "A story revolving around Bell Rock.",
+                stats: { wantToRead: 150, currentlyReading: 10, haveRead: 50 },
+                details: { publisher: "Joseph Carletonbeal", year: 2020, pages: 200, language: "English", editions: 1 },
+                readLink: "bookworm_books/Fiction/BellRock.pdf"
+            },
+            {
+                id: 2,
+                title: "Middlemarch",
+                author: "George Eliot",
+                rating: 4.6,
+                genre: "Fiction",
+                color: "#8b5cf6",
+                desc: "A study of provincial life, exploring the lives of various residents in a fictitious Midlands town.",
+                stats: { wantToRead: 1200, currentlyReading: 100, haveRead: 800 },
+                details: { publisher: "William Blackwood", year: 1871, pages: 800, language: "English", editions: 120 },
+                readLink: "bookworm_books/Fiction/Middlemarch.pdf"
+            },
+            {
+                id: 3,
+                title: "The Dry Fire of Revenge",
+                author: "Azlan Shahid",
+                rating: 3.8,
+                genre: "Fiction",
+                color: "#ef4444",
+                desc: "A thrilling tale of vengeance.",
+                stats: { wantToRead: 80, currentlyReading: 5, haveRead: 20 },
+                details: { publisher: "Indie Pub", year: 2021, pages: 250, language: "English", editions: 1 },
+                readLink: "bookworm_books/Fiction/TheDryFireOfRevenge.pdf"
+            },
+            {
+                id: 4,
+                title: "The Poor House Mystery",
+                author: "Anthony Perry jr",
+                rating: 4.1,
+                genre: "Fiction",
+                color: "#10b981",
+                desc: "Mystery and intrigue within the walls of a poor house.",
+                stats: { wantToRead: 200, currentlyReading: 15, haveRead: 60 },
+                details: { publisher: "Mystery House", year: 2019, pages: 310, language: "English", editions: 2 },
+                readLink: "bookworm_books/Fiction/ThePoorHouseMystery.pdf"
+            },
+
+            // Mystery
+            {
+                id: 5,
+                title: "Sherlock Adventures",
+                author: "Arthur Conan Doyle",
+                rating: 4.8,
+                genre: "Mystery",
+                color: "#f59e0b",
+                desc: "The adventures of the famous detective Sherlock Holmes.",
+                stats: { wantToRead: 5000, currentlyReading: 200, haveRead: 3500 },
+                details: { publisher: "Strand Magazine", year: 1892, pages: 300, language: "English", editions: 200 },
+                readLink: "bookworm_books/Mystery/SherlockAdventures.pdf"
+            },
+            {
+                id: 6,
+                title: "Tales of Murder",
+                author: "Will Lankstead",
+                rating: 4.2,
+                genre: "Mystery",
+                color: "#dc2626",
+                desc: "A collection of murderous tales.",
+                stats: { wantToRead: 300, currentlyReading: 40, haveRead: 150 },
+                details: { publisher: "Crime Press", year: 2020, pages: 220, language: "English", editions: 1 },
+                readLink: "bookworm_books/Mystery/TalesOfMurder.pdf"
+            },
+            {
+                id: 7,
+                title: "The Hound",
+                author: "Arthur Conan Doyle",
+                rating: 4.7,
+                genre: "Mystery",
+                color: "#1e293b",
+                desc: "The Hound of the Baskervilles.",
+                stats: { wantToRead: 4000, currentlyReading: 150, haveRead: 2000 },
+                details: { publisher: "George Newnes", year: 1902, pages: 350, language: "English", editions: 150 },
+                readLink: "bookworm_books/Mystery/TheHound.pdf"
+            },
+            {
+                id: 8,
+                title: "The King in Yellow",
+                author: "Robert W. Chambers",
+                rating: 4.3,
+                genre: "Mystery",
+                color: "#fbbf24",
+                desc: "A book of short stories linked by a mysterious play.",
+                stats: { wantToRead: 800, currentlyReading: 50, haveRead: 300 },
+                details: { publisher: "F. Tennyson Neely", year: 1895, pages: 290, language: "English", editions: 50 },
+                readLink: "bookworm_books/Mystery/TheKingInYellow.pdf"
+            },
+
+            // Non-Fiction
+            {
+                id: 9,
+                title: "Ahimsa",
+                author: "Dadashri",
+                rating: 4.5,
+                genre: "Non-Fiction",
+                color: "#84cc16",
+                desc: "Exploring the philosophy of non-violence.",
+                stats: { wantToRead: 100, currentlyReading: 10, haveRead: 40 },
+                details: { publisher: "Wisdom Pub", year: 2018, pages: 180, language: "English", editions: 1 },
+                readLink: "bookworm_books/Non_Fiction/ahimsa.pdf"
+            },
+            {
+                id: 10,
+                title: "Eclipsed",
+                author: "Peter MCMillan",
+                rating: 4.0,
+                genre: "Non-Fiction",
+                color: "#0ea5e9",
+                desc: "Stories of eclipses and celestial events.",
+                stats: { wantToRead: 150, currentlyReading: 12, haveRead: 45 },
+                details: { publisher: "Science Daily", year: 2021, pages: 210, language: "English", editions: 1 },
+                readLink: "bookworm_books/Non_Fiction/eclipsed.pdf"
+            },
+            {
+                id: 11,
+                title: "The Republic",
+                author: "Plato",
+                rating: 4.7,
+                genre: "Non-Fiction",
+                color: "#6366f1",
+                desc: "A Socratic dialogue exploring justice.",
+                stats: { wantToRead: 3000, currentlyReading: 200, haveRead: 1500 },
+                details: { publisher: "Classics Inc", year: -380, pages: 400, language: "Greek/English", editions: 500 },
+                readLink: "bookworm_books/Non_Fiction/TheRepublic.pdf"
+            },
+            {
+                id: 12,
+                title: "The Wealth of Nations",
+                author: "Adam Smith",
+                rating: 4.5,
+                genre: "Non-Fiction",
+                color: "#14b8a6",
+                desc: "A foundational work in classical economics.",
+                stats: { wantToRead: 2500, currentlyReading: 120, haveRead: 1100 },
+                details: { publisher: "W. Strahan and T. Cadell", year: 1776, pages: 900, language: "English", editions: 300 },
+                readLink: "bookworm_books/Non_Fiction/TheWeALTHofnations.pdf"
+            },
+            {
+                id: 13,
+                title: "Walden",
+                author: "Henry David Thoreau",
+                rating: 4.4,
+                genre: "Non-Fiction",
+                color: "#22c55e",
+                desc: "A reflection on simple living in natural surroundings.",
+                stats: { wantToRead: 1800, currentlyReading: 90, haveRead: 700 },
+                details: { publisher: "Ticknor and Fields", year: 1854, pages: 350, language: "English", editions: 200 },
+                readLink: "bookworm_books/Non_Fiction/Walden.pdf"
+            },
+
+            // Sci-Fi
+            {
+                id: 14,
+                title: "Frankenstein",
+                author: "Mary Shelley",
+                rating: 4.6,
+                genre: "Sci-Fi",
+                color: "#64748b",
+                desc: "The tale of a scientist and his monstrous creation.",
+                stats: { wantToRead: 3500, currentlyReading: 200, haveRead: 2000 },
+                details: { publisher: "Lackington, Hughes, Harding, Mavor & Jones", year: 1818, pages: 280, language: "English", editions: 400 },
+                readLink: "bookworm_books/SciFi/Frankenstein.pdf"
+            },
+            {
+                id: 15,
+                title: "Gilgamesh",
+                author: "John FK",
+                rating: 4.3,
+                genre: "Sci-Fi",
+                color: "#a3e635",
+                desc: "An epic poem often cited as one of the earliest surviving great works of literature.",
+                stats: { wantToRead: 1500, currentlyReading: 80, haveRead: 600 },
+                details: { publisher: "Ancient Sumeria", year: -2100, pages: 200, language: "Akkadian/English", editions: 150 },
+                readLink: "bookworm_books/SciFi/Gilgamesh.pdf"
+            },
+            {
+                id: 16,
+                title: "One Galaxy",
+                author: "L.M.Ridd",
+                rating: 4.1,
+                genre: "Sci-Fi",
+                color: "#4f46e5",
+                desc: "Space exploration and adventure.",
+                stats: { wantToRead: 200, currentlyReading: 20, haveRead: 90 },
+                details: { publisher: "Galaxy Press", year: 2022, pages: 320, language: "English", editions: 1 },
+                readLink: "bookworm_books/SciFi/OneGalaxy.pdf"
+            },
+            {
+                id: 17,
+                title: "Project Hail Mary",
+                author: "Andy Weir",
+                rating: 4.8,
+                genre: "Sci-Fi",
+                color: "#0284c7",
+                desc: "A lone astronaut must save Earth from disaster.",
+                stats: { wantToRead: 4500, currentlyReading: 300, haveRead: 2500 },
+                details: { publisher: "Ballantine Books", year: 2021, pages: 496, language: "English", editions: 35 },
+                readLink: "bookworm_books/SciFi/ProjectMaryHail.pdf"
+            },
+            {
+                id: 18,
+                title: "The Time Machine",
+                author: "H.G. Wells",
+                rating: 4.5,
+                genre: "Sci-Fi",
+                color: "#e11d48",
+                desc: "A journey through time.",
+                stats: { wantToRead: 3000, currentlyReading: 150, haveRead: 1800 },
+                details: { publisher: "William Heinemann", year: 1895, pages: 150, language: "English", editions: 300 },
+                readLink: "bookworm_books/SciFi/TheTimeMachine.pdf"
+            },
+            {
+                id: 19,
+                title: "Twenty Thousand Leagues Under the Sea",
+                author: "Jules Verne",
+                rating: 4.4,
+                genre: "Sci-Fi",
+                color: "#0891b2",
+                desc: "Adventures under the sea with Captain Nemo.",
+                stats: { wantToRead: 2800, currentlyReading: 130, haveRead: 1600 },
+                details: { publisher: "Pierre-Jules Hetzel", year: 1870, pages: 400, language: "French/English", editions: 250 },
+                readLink: "bookworm_books/SciFi/TwentyThousandLeaguesUndertheSea.pdf"
+            },
+
+            // Self-Help
+            {
+                id: 20,
+                title: "Atomic Habits",
+                author: "James Clear",
+                rating: 4.9,
+                genre: "Self-Help",
+                color: "#f59e0b",
+                desc: "An Easy & Proven Way to Build Good Habits & Break Bad Ones.",
+                stats: { wantToRead: 6000, currentlyReading: 400, haveRead: 3000 },
+                details: { publisher: "Avery", year: 2018, pages: 320, language: "English", editions: 150 },
+                readLink: "bookworm_books/self_help/Atomichabits.pdf"
+            },
+            {
+                id: 21,
+                title: "Bhagavad Gita",
+                author: "Vyasa",
+                rating: 4.8,
+                genre: "Self-Help",
+                color: "#fcd34d",
+                desc: "A 700-verse Hindu scripture that is part of the epic Mahabharata.",
+                stats: { wantToRead: 5000, currentlyReading: 300, haveRead: 4000 },
+                details: { publisher: "Ancient", year: -200, pages: 200, language: "Sanskrit/English", editions: 1000 },
+                readLink: "bookworm_books/self_help/BhagvadGita.pdf"
+            },
+            {
+                id: 22,
+                title: "Ultimate Self Help Book",
+                author: "Isidora Vey",
+                rating: 4.0,
+                genre: "Self-Help",
+                color: "#a78bfa",
+                desc: "A comprehensive guide to improving your life.",
+                stats: { wantToRead: 150, currentlyReading: 10, haveRead: 40 },
+                details: { publisher: "Self Pub", year: 2020, pages: 250, language: "English", editions: 1 },
+                readLink: "bookworm_books/self_help/UltimateSelfHelpBook.pdf"
+            },
+
+            // Thriller
+            {
+                id: 23,
+                title: "The Strange case of Dr.Jekyll and Mr.Hyde",
+                author: "Robert Louis Stevenson",
+                rating: 4.2,
+                genre: "Thriller",
+                color: "#b91c1c",
+                desc: "Thrilling adventures of a doctor.",
+                stats: { wantToRead: 200, currentlyReading: 15, haveRead: 70 },
+                details: { publisher: "Med Press", year: 2021, pages: 280, language: "English", editions: 1 },
+                readLink: "bookworm_books/Thriller/docstrange.pdf"
+            },
+            {
+                id: 24,
+                title: "Dracula",
+                author: "Bram Stoker",
+                rating: 4.7,
+                genre: "Thriller",
+                color: "#7f1d1d",
+                desc: "The classic gothic horror novel.",
+                stats: { wantToRead: 4000, currentlyReading: 250, haveRead: 2200 },
+                details: { publisher: "Archibald Constable and Company", year: 1897, pages: 390, language: "English", editions: 300 },
+                readLink: "bookworm_books/Thriller/dracula.pdf"
+            },
+            {
+                id: 25,
+                title: "Heart of Drakness",
+                author: "Joseph Conrad",
+                rating: 4.1,
+                genre: "Thriller",
+                color: "#be123c",
+                desc: "A suspenseful story.",
+                stats: { wantToRead: 120, currentlyReading: 10, haveRead: 30 },
+                details: { publisher: "Thriller Pub", year: 2019, pages: 200, language: "English", editions: 1 },
+                readLink: "bookworm_books/Thriller/heart.pdf"
+            },
+            {
+                id: 26,
+                title: "Jungle Justice",
+                author: "Faith Ijiga",
+                rating: 3.9,
+                genre: "Thriller",
+                color: "#15803d",
+                desc: "A jungle thriller.",
+                stats: { wantToRead: 90, currentlyReading: 5, haveRead: 20 },
+                details: { publisher: "Wild Press", year: 2022, pages: 310, language: "English", editions: 1 },
+                readLink: "bookworm_books/Thriller/junglelej.pdf"
+            },
+            {
+                id: 27,
+                title: "Nurse Becky Gets Shot",
+                author: "Gary Baker",
+                rating: 3.5,
+                genre: "Thriller",
+                color: "#881337",
+                desc: "A medical thriller.",
+                stats: { wantToRead: 100, currentlyReading: 8, haveRead: 15 },
+                details: { publisher: "Nurse Pub", year: 2020, pages: 180, language: "English", editions: 1 },
+                readLink: "bookworm_books/Thriller/NurseBeckyGetsShotobooko.pdf"
+            }
+        ];
+
+        let reviewsData = [
+            { id: 1, bookId: 1, bookTitle: "Bell Rock", reviewer: "Sarah", initials: "SM", rating: 4, title: "Twists and Turns", text: "Absolutely gripping.", date: "2 hours ago", isCurrentUser: false }
+        ];
+        let currentUser = null;
+        let userPassword = "Pass123";
+        let userReadingList = [];
+        let userBooksRead = [];
+        let userBooksLiked = [];
+        let pendingBooks = []; // NEW: For admin logic
+
+        // ========== VALIDATION ==========
+        const showError = (id, msg) => {
+            const el = document.getElementById(id);
+            const errEl = document.getElementById(id + 'Error');
+            if (el) el.classList.add('error');
+            if (errEl) { errEl.textContent = msg; errEl.classList.add('visible'); }
+        };
+        const clearError = (id) => {
+            const el = document.getElementById(id);
+            const errEl = document.getElementById(id + 'Error');
+            if (el) el.classList.remove('error');
+            if (errEl) errEl.classList.remove('visible');
+        };
+        const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const isValidPass = (pass) => {
+            if (pass.length < 8) return "Min 8 chars";
+            if (!/[A-Z]/.test(pass)) return "Need 1 uppercase";
+            if (!/[0-9]/.test(pass)) return "Need 1 number";
+            return "";
+        };
+
+        // ========== AUTH LOGIC ==========
+        function showAuthPage(page) {
+            document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+        }
+
+        // Login Logic
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            let valid = true;
+            const name = document.getElementById('loginName').value;
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            if (!name) { showError('loginName', 'Required'); valid = false; } else clearError('loginName');
+            if (!email) { showError('loginEmail', 'Required'); valid = false; }
+            else if (!isValidEmail(email)) { showError('loginEmail', 'Invalid'); valid = false; } else clearError('loginEmail');
+            if (!pass) { showError('loginPassword', 'Required'); valid = false; } else clearError('loginPassword');
+
+            if (valid) {
+                fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: pass
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            currentUser = {
+                                name: data.user.username,
+                                email: data.user.email,
+                                initials: data.user.username.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
+                                genres: ['Fiction'],
+                                contact: '',
+                                age: '',
+                                // NEW: Detect Admin - Check if backend sends isAdmin or if email matches specific admin email
+                                isAdmin: data.user.isAdmin || (email === 'admin@bookworm.com')
+                            };
+                            loginUser();
+                        } else {
+                            showToast(data.message || 'User not found', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        // Fallback for demo if server is down
+                        if (email === "admin@bookworm.com" && pass === "Admin123") {
+                            currentUser = {
+                                name: "Admin User",
+                                email: email,
+                                initials: "AU",
+                                genres: ['Fiction'],
+                                isAdmin: true
+                            };
+                            loginUser();
+                        } else {
+                            showToast('Connection error. Is server running?', 'error');
+                        }
+                    });
+            }
+        });
+
+        // Register Logic
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            let valid = true;
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const pass = document.getElementById('registerPassword').value;
+            const cpass = document.getElementById('registerConfirmPassword').value;
+            const terms = document.getElementById('agreeTerms').checked;
+
+            if (!name) { showError('registerName', 'Required'); valid = false; }
+            else clearError('registerName');
+
+            if (!email) { showError('registerEmail', 'Required'); valid = false; }
+            else if (!isValidEmail(email)) { showError('registerEmail', 'Invalid'); valid = false; }
+            else clearError('registerEmail');
+
+            const passErr = isValidPass(pass);
+            if (passErr) { showError('registerPassword', passErr); valid = false; }
+            else clearError('registerPassword');
+
+            if (pass !== cpass) { showError('registerConfirmPassword', 'Mismatch'); valid = false; }
+            else clearError('registerConfirmPassword');
+
+            if (!terms) { showError('agreeTerms', 'Must agree'); valid = false; }
+            else clearError('agreeTerms');
+
+            if (valid) {
+                const btn = this.querySelector('button[type="submit"]');
+                btn.innerText = "Creating...";
+                btn.disabled = true;
+
+                fetch('http://127.0.0.1:3000/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: name, email: email, password: pass })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast('Account created! Please login.', 'success');
+                            showAuthPage('login');
+                            document.getElementById('registerForm').reset();
+                        } else {
+                            showToast(data.message || 'Error creating account', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        showToast('Cannot connect to server', 'error');
+                    })
+                    .finally(() => {
+                        btn.innerText = "Create Account";
+                        btn.disabled = false;
+                    });
+            }
+        });
+
+
+        function loginUser() {
+            document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+            document.getElementById('appShell').classList.add('active');
+
+            // NEW: Show/Hide Admin Elements based on role
+            if (currentUser.isAdmin) {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex' || 'block');
+            } else {
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+            }
+
+            updateUI();
+            showToast('Welcome, ' + currentUser.name + '!', 'success');
+            navigateTo('dashboard');
+        }
+
+        function logout() {
+            currentUser = null;
+            userBooksRead = [];
+            userBooksLiked = [];
+            userReadingList = [];
+            // Hide admin elements
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+
+            document.getElementById('appShell').classList.remove('active');
+            showAuthPage('login');
+            showToast('Logged out', 'success');
+        }
+
+        // ========== NAVIGATION ==========
+        function navigateTo(page) {
+            if (page === 'admin') {
+                if (!currentUser || !currentUser.isAdmin) {
+                    const pass = prompt("Enter Admin Password:");
+                    if (pass === "Admin@123") {
+                        if (currentUser) currentUser.isAdmin = true;
+                    } else {
+                        showToast("Incorrect Admin Password", "error");
+                        return; // Stop navigation
+                    }
+                }
+            }
+
+            document.querySelectorAll('.content-page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(page + 'Page');
+            if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const activeLink = document.querySelector(`.nav-link[onclick="navigateTo('${page}')"]`);
+            if (activeLink) activeLink.classList.add('active');
+
+            if (page === 'books') renderBooks();
+            if (page === 'reviews') renderReviews();
+            if (page === 'recommendations') renderRecommendations();
+            if (page === 'dashboard') renderDashboard();
+            if (page === 'profile') renderProfile();
+            if (page === 'admin') renderAdminPage(); // NEW
+
+            document.getElementById('sidebar').classList.remove('open');
+        }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ========== UI & RENDERING ==========
+        function updateUI() {
+            if (!currentUser) return;
+            document.getElementById('sidebarAvatar').textContent = currentUser.initials;
+            document.getElementById('sidebarUserName').textContent = currentUser.name;
+            document.getElementById('sidebarUserEmail').textContent = currentUser.email;
+            document.getElementById('dashboardGreeting').textContent = 'Welcome back, ' + currentUser.name;
+
+            document.getElementById('booksReadCount').textContent = userBooksRead.length;
+            document.getElementById('reviewsWrittenCount').textContent = reviewsData.filter(r => r.isCurrentUser).length;
+            document.getElementById('booksLikedCount').textContent = userBooksLiked.length;
+
+            renderProfile();
+        }
+        function showToast(msg, type) {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.innerHTML = `<span>${msg}</span>`;
+            c.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ========== FIX: Genre Normalization ==========
+        function normalizeGenre(genre) {
+            if (!genre) return 'Other';
+            const g = genre.toString().trim().toLowerCase();
+            const genreMap = {
+                'fiction': 'Fiction',
+                'non-fiction': 'Non-Fiction', 'nonfiction': 'Non-Fiction', 'non fiction': 'Non-Fiction', 'non_fiction': 'Non-Fiction',
+                'mystery': 'Mystery',
+                'sci-fi': 'Sci-Fi', 'scifi': 'Sci-Fi', 'sci fi': 'Sci-Fi', 'sci_fi': 'Sci-Fi', 'science fiction': 'Sci-Fi',
+                'thriller': 'Thriller',
+                'self-help': 'Self-Help', 'selfhelp': 'Self-Help', 'self help': 'Self-Help', 'self_help': 'Self-Help',
+                'romance': 'Romance',
+                'horror': 'Horror',
+                'biography': 'Biography', 'autobiography': 'Biography',
+                'history': 'History',
+                'philosophy': 'Philosophy',
+                'fantasy': 'Fantasy'
+            };
+            return genreMap[g] || genre;
+        }
+
+        // ========== BOOKS & SEARCH ==========
+        function renderBooks(filter = 'All', search = '') {
+            const grid = document.getElementById('booksGrid');
+            let filtered = booksData;
+
+            if (filter !== 'All') filtered = filtered.filter(b => normalizeGenre(b.genre) === filter);
+            if (search) filtered = filtered.filter(b =>
+                b.title.toLowerCase().includes(search.toLowerCase()) ||
+                b.author.toLowerCase().includes(search.toLowerCase())
+            );
+            grid.innerHTML = filtered.map(b => `
+ <div class="card book-card" onclick="openBookPreview(${b.id})">
+ <div class="book-cover" style="background:linear-gradient(135deg, ${b.color}, ${b.color}88);">
+ <div class="book-cover-text">
+ <h3 class="font-bold text-white text-sm">${b.title}</h3>
+ <p class="text-xs text-gray-300">${b.author}</p>
+ </div>
+ </div>
+ <div class="book-info">
+ <div class="star-rating mb-2">
+ ${createStarsHTML(b.rating)}
+ </div>
+ <p class="text-xs text-[var(--text-muted)] line-clamp-2">${b.desc || 'No description available.'}</p>
+ </div>
+ </div>
+ `).join('');
+        }
+        function filterBooks(genre) {
+            document.querySelectorAll('#genreFilters button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderBooks(genre, document.getElementById('globalSearch').value);
+        }
+        document.getElementById('globalSearch').addEventListener('input', (e) => {
+            if (!document.getElementById('booksPage').classList.contains('active')) {
+                navigateTo('books');
+            }
+            renderBooks('All', e.target.value);
+        });
+
+        // ========== FIX: markAsRead function ==========
+        function markAsRead(id) {
+            const idx = userBooksRead.indexOf(id);
+            if (idx === -1) {
+                userBooksRead.push(id);
+                showToast('Marked as read!', 'success');
+            } else {
+                userBooksRead.splice(idx, 1);
+                showToast('Removed from Books Read', 'success');
+            }
+            updateUI();
+            if (document.getElementById('bookPreviewModal').classList.contains('active')) {
+                openBookPreview(id);
+            }
+            if (document.getElementById('dashboardPage').classList.contains('active')) {
+                renderDashboard();
+            }
+        }
+
+        // ========== BOOK PREVIEW WITH TABS ==========
+        function openBookPreview(id) {
+            const book = booksData.find(b => b.id === id);
+            if (!book) return;
+            const isLiked = userBooksLiked.includes(id);
+            const isInList = userReadingList.includes(id);
+            const isRead = userBooksRead.includes(id);
+
+            document.getElementById('previewTitle').textContent = book.title;
+
+            let tabHeaderHtml = `
+ <div class="book-tabs-container">
+ <button class="book-tab-btn active" onclick="switchBookTab(event, 'overview-${id}')">Overview</button>
+ <button class="book-tab-btn" onclick="switchBookTab(event, 'details-${id}')">Details</button>
+ <button class="book-tab-btn" onclick="switchBookTab(event, 'reviews-${id}')">Reviews</button>
+ </div>
+ `;
+
+            let overviewContent = `
+ <div class="flex flex-col md:flex-row gap-8">
+ <div style="flex:1; min-width:200px; display:flex; justify-content:center;">
+ <div style="width:200px; height:300px; background:linear-gradient(135deg, ${book.color}, ${book.color}88); border-radius:12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);"></div>
+ </div>
+ <div style="flex:2; min-width:250px;">
+ <h2 class="font-display text-2xl mb-1">${book.title}</h2>
+ <p class="text-[var(--text-muted)] mb-2">by <span class="text-[var(--accent-primary)]">${book.author}</span></p>
+ <p class="text-sm text-[var(--text-muted)] mb-4">First published ${book.details.year}</p>
+ 
+ <div class="flex items-center gap-3 mb-4">
+ <div class="star-rating">${createStarsHTML(book.rating)}</div>
+ <span class="text-xl font-bold">${book.rating}</span>
+ <span class="text-sm text-[var(--text-muted)]">${Math.floor(Math.random() * 500 + 100)} ratings</span>
+ </div>
+ 
+ <div class="flex flex-wrap gap-2 mb-6">
+ <span class="stat-pill"><strong>${book.stats.wantToRead.toLocaleString()}</strong> Want to read</span>
+ <span class="stat-pill"><strong>${book.stats.currentlyReading.toLocaleString()}</strong> Currently reading</span>
+ <span class="stat-pill"><strong>${book.stats.haveRead.toLocaleString()}</strong> Have read</span>
+ </div>
+ 
+ <p class="text-[var(--text-secondary)] mb-6">${book.desc}</p>
+ 
+ <div class="flex flex-wrap gap-3">
+ <a href="${book.readLink || '#'}" class="btn btn-primary" target="_blank" onclick="markAsRead(${book.id})">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+ Read Full Book
+ </a>
+ <button class="btn ${isRead ? 'btn-success' : 'btn-secondary'}" onclick="markAsRead(${book.id})" ${isRead ? 'style="color:#fff;"' : ''}>
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+ ${isRead ? 'Read' : 'Mark as Read'}
+ </button>
+ <button class="btn ${isLiked ? 'btn-primary' : 'btn-secondary'}" onclick="toggleLike(${book.id})" style="color: ${isLiked ? 'var(--bg-primary)' : 'var(--error)'}; border-color: ${isLiked ? '' : 'var(--error)'};">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+ ${isLiked ? 'Liked' : 'Like'}
+ </button>
+ <button class="btn btn-secondary" onclick="toggleReadingList(${book.id})">
+ ${isInList ? 'In List' : 'Add to List'}
+ </button>
+ </div>
+ </div>
+ </div>
+ `;
+
+            let detailsContent = `
+ <h3 class="font-display text-xl mb-4">Book Details</h3>
+ <div>
+ <div class="detail-row"><span class="detail-label">First Published</span><span class="detail-value">${book.details.year}</span></div>
+ <div class="detail-row"><span class="detail-label">Publisher</span><span class="detail-value">${book.details.publisher}</span></div>
+ <div class="detail-row"><span class="detail-label">Language</span><span class="detail-value">${book.details.language}</span></div>
+ <div class="detail-row"><span class="detail-label">Pages</span><span class="detail-value">${book.details.pages}</span></div>
+ </div>
+ `;
+
+            let reviewsContent = `
+ <h3 class="font-display text-xl mb-4">Community Reviews</h3>
+ <div class="text-center py-8 text-[var(--text-muted)]">
+ <p>Reviews section coming soon.</p>
+ </div>
+ `;
+
+            document.getElementById('previewContent').innerHTML = `
+ ${tabHeaderHtml}
+ <div id="tab-overview-${id}" class="book-tab-content active">${overviewContent}</div>
+ <div id="tab-details-${id}" class="book-tab-content">${detailsContent}</div>
+ <div id="tab-reviews-${id}" class="book-tab-content">${reviewsContent}</div>
+ `;
+
+            openModal('bookPreviewModal');
+        }
+
+        function switchBookTab(evt, tabName) {
+            document.querySelectorAll('.book-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.querySelectorAll('.book-tab-btn').forEach(b => b.classList.remove('active'));
+            evt.target.classList.add('active');
+        }
+
+        function toggleLike(id) {
+            const idx = userBooksLiked.indexOf(id);
+            if (idx === -1) {
+                userBooksLiked.push(id);
+                showToast('Added to liked books', 'success');
+            } else {
+                userBooksLiked.splice(idx, 1);
+                showToast('Removed from liked books', 'success');
+            }
+            updateUI();
+            openBookPreview(id);
+        }
+
+        // ========== REVIEWS ==========
+        function createStarsHTML(rating) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += `<span class="star ${i <= rating ? 'active' : ''}" style="pointer-events:none;"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>`;
+            }
+            return html;
+        }
+        function renderReviews() {
+            const list = document.getElementById('reviewsList');
+            list.innerHTML = reviewsData.map(r => `
+ <div class="card mb-4" style="padding:1.5rem;">
+ <div class="flex justify-between items-start mb-2">
+ <div>
+ <h4 class="font-semibold">${r.bookTitle}</h4>
+ <p class="text-sm text-[var(--text-muted)]">${r.reviewer} • ${r.date}</p>
+ </div>
+ <div class="star-rating">${createStarsHTML(r.rating)}</div>
+ </div>
+ <p class="text-[var(--accent-primary)] font-medium mb-1">${r.title}</p>
+ <p class="text-[var(--text-secondary)] mb-3">${r.text}</p>
+ ${r.isCurrentUser ? `<button class="btn btn-ghost text-xs" onclick="deleteReview(${r.id})">Delete Review</button>` : ''}
+ </div>
+ `).join('');
+        }
+        function deleteReview(id) {
+            if (confirm('Are you sure you want to delete this review?')) {
+                reviewsData = reviewsData.filter(r => r.id !== id);
+                updateUI();
+                renderReviews();
+                showToast('Review deleted', 'success');
+            }
+        }
+        function renderDashboard() {
+            const container = document.getElementById('dashboardReviews');
+            container.innerHTML = reviewsData.slice(0, 2).map(r => `
+ <div class="card mb-4" style="padding:1rem;">
+ <div class="flex justify-between items-center mb-1">
+ <h4 class="font-semibold">${r.bookTitle}</h4>
+ <div class="star-rating">${createStarsHTML(r.rating)}</div>
+ </div>
+ <p class="text-sm text-[var(--text-secondary)]">${r.text}</p>
+ </div>
+ `).join('');
+        }
+        function openReviewModal() {
+            const sel = document.getElementById('reviewBookSelect');
+            sel.innerHTML = '<option value="">Select...</option>' + booksData.map(b => `<option value="${b.id}">${b.title}</option>`).join('');
+
+            const stars = document.getElementById('reviewStarRating');
+            stars.innerHTML = [1, 2, 3, 4, 5].map(i => `<span class="star" data-rating="${i}" onclick="setRating(${i})"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>`).join('');
+
+            document.getElementById('reviewTitle').value = '';
+            document.getElementById('reviewText').value = '';
+            setRating(0);
+            openModal('reviewModal');
+        }
+        function setRating(r) {
+            document.querySelectorAll('#reviewStarRating .star').forEach((s, i) => {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+        document.getElementById('reviewForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const bookId = document.getElementById('reviewBookSelect').value;
+            const ratingNodes = document.querySelectorAll('#reviewStarRating .star.active');
+            const rating = ratingNodes.length;
+
+            const title = document.getElementById('reviewTitle').value;
+            const text = document.getElementById('reviewText').value;
+            if (!bookId || !rating || !title || !text) { showToast('Fill all fields', 'error'); return; }
+            const book = booksData.find(b => b.id == bookId);
+            reviewsData.unshift({
+                id: Date.now(), bookId: parseInt(bookId), bookTitle: book.title,
+                reviewer: currentUser.name, initials: currentUser.initials,
+                rating: rating, title: title, text: text,
+                date: 'Just now', isCurrentUser: true
+            });
+
+            updateUI();
+            closeModal('reviewModal');
+            showToast('Review added!', 'success');
+            renderReviews();
+        });
+
+
+        // ========== RECOMMENDATIONS ==========
+        function renderRecommendations() {
+            const list = document.getElementById('recommendationsList');
+            list.innerHTML = booksData.map(b => {
+                const isInList = userReadingList.includes(b.id);
+                return `
+ <div class="card mb-4" style="padding:1.5rem; display:flex; gap:1.5rem; align-items:center;">
+ <div style="width:80px; height:120px; background:linear-gradient(135deg, ${b.color}, ${b.color}88); border-radius:8px; flex-shrink:0;"></div>
+ <div style="flex:1;">
+ <h3 class="font-semibold">${b.title}</h3>
+ <p class="text-sm text-[var(--text-muted)]">${b.author}</p>
+ <p class="text-xs text-[var(--text-secondary)] mt-2 line-clamp-2">${b.desc}</p>
+ </div>
+ <button class="btn ${isInList ? 'btn-primary' : 'btn-secondary'}" onclick="toggleReadingList(${b.id})">${isInList ? 'In List' : 'Add to List'}</button>
+ </div>
+ `}).join('');
+        }
+        function toggleReadingList(id) {
+            const idx = userReadingList.indexOf(id);
+            if (idx === -1) { userReadingList.push(id); showToast('Added to list', 'success'); }
+            else { userReadingList.splice(idx, 1); showToast('Removed', 'success'); }
+            renderRecommendations();
+            if (document.getElementById('bookPreviewModal').classList.contains('active')) {
+                openBookPreview(id);
+            }
+        }
+
+        // ========== PROFILE ==========
+        function renderProfile() {
+            if (!currentUser) return;
+            document.getElementById('profileAvatar').textContent = currentUser.initials;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+
+            const genreContainer = document.getElementById('profileGenres');
+            genreContainer.innerHTML = currentUser.genres.map(g => `<span class="text-xs px-2 py-1 rounded-full" style="background:var(--bg-secondary); border:1px solid var(--border-color);">${g}</span>`).join('');
+
+            renderOverview();
+        }
+        function switchProfileTab(tab) {
+            const tabMap = {
+                'overview': 'profileOverview',
+                'reading': 'profileReadingList',
+                'myreviews': 'profileMyReviews',
+                'settings': 'profileSettings'
+            };
+            Object.values(tabMap).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            const targetId = tabMap[tab];
+            if (targetId) {
+                document.getElementById(targetId).style.display = 'block';
+            }
+            document.querySelectorAll('.profile-tabs-container .btn-secondary').forEach(b => b.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (tab === 'settings') renderSettings();
+            if (tab === 'reading') renderReadingList();
+            if (tab === 'myreviews') renderMyReviews();
+        }
+        function renderOverview() {
+            document.getElementById('profileOverview').innerHTML = `
+ <div class="stats-grid">
+ <div class="stat-card" onclick="showListModal('read')"><div class="stat-value">${userBooksRead.length}</div><div class="stat-label">Books Read</div></div>
+ <div class="stat-card" onclick="showListModal('reviews')"><div class="stat-value">${reviewsData.filter(r => r.isCurrentUser).length}</div><div class="stat-label">Reviews Written</div></div>
+ </div>
+ `;
+        }
+        function renderReadingList() {
+            const el = document.getElementById('profileReadingList');
+            if (userReadingList.length === 0) {
+                el.innerHTML = '<div class="text-center text-[var(--text-muted)] py-8">Your reading list is empty.</div>';
+                return;
+            }
+            el.innerHTML = userReadingList.map(id => {
+                const b = booksData.find(book => book.id === id);
+                if (!b) return '';
+                return `<div class="list-item"><div class="list-item-cover" style="background:${b.color}"></div><div style="flex:1;"><div class="font-medium">${b.title}</div><div class="text-xs text-[var(--text-muted)]">${b.author}</div></div><button class="btn btn-secondary" onclick="toggleReadingList(${b.id}); renderReadingList();">Remove</button></div>`;
+            }).join('');
+        }
+        function renderMyReviews() {
+            const el = document.getElementById('profileMyReviews');
+            const myReviews = reviewsData.filter(r => r.isCurrentUser);
+            if (myReviews.length === 0) {
+                el.innerHTML = '<div class="text-center text-[var(--text-muted)] py-8">You haven\'t written any reviews yet.</div>';
+                return;
+            }
+            el.innerHTML = myReviews.map(r => `
+ <div class="list-item flex justify-between items-center">
+ <div>
+ <div class="font-medium">${r.bookTitle}</div>
+ <div class="text-xs text-[var(--text-muted)]">${r.rating} Stars - ${r.title}</div>
+ </div>
+ <button class="btn btn-ghost text-xs" onclick="deleteReview(${r.id}); renderMyReviews();">Delete</button>
+ </div>
+ `).join('');
+        }
+        function renderSettings() {
+            document.getElementById('profileSettings').innerHTML = `
+ <div class="card p-6 mb-4">
+ <div class="flex justify-between items-center">
+ <div><h3 class="font-medium">Change Password</h3><p class="text-sm text-[var(--text-muted)]">Update your security credentials.</p></div>
+ <button class="btn btn-secondary" onclick="openModal('passwordModal')">Change</button>
+ </div>
+ </div>
+ `;
+        }
+        function openEditProfileModal() {
+            document.getElementById('editName').value = currentUser.name;
+            document.getElementById('editEmail').value = currentUser.email;
+            document.getElementById('editContact').value = currentUser.contact || '';
+            document.getElementById('editAge').value = currentUser.age || '';
+
+            const sel = document.getElementById('editGenres');
+            Array.from(sel.options).forEach(o => {
+                o.selected = currentUser.genres.includes(o.value);
+            });
+
+            openModal('editProfileModal');
+        }
+        document.getElementById('editProfileForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            currentUser.name = document.getElementById('editName').value;
+            currentUser.email = document.getElementById('editEmail').value;
+            currentUser.contact = document.getElementById('editContact').value;
+            currentUser.age = document.getElementById('editAge').value;
+
+            const genreSelect = document.getElementById('editGenres');
+            currentUser.genres = Array.from(genreSelect.selectedOptions).map(o => o.value);
+
+            currentUser.initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            updateUI();
+            closeModal('editProfileModal');
+            showToast('Profile updated', 'success');
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const curr = document.getElementById('currentPass').value;
+            const newP = document.getElementById('newPass').value;
+            const conf = document.getElementById('confirmPass').value;
+            const errEl = document.getElementById('passwordError');
+
+            if (curr !== userPassword) { errEl.textContent = "Current password incorrect"; errEl.style.display = "block"; return; }
+            const valErr = isValidPass(newP);
+            if (valErr) { errEl.textContent = valErr; errEl.style.display = "block"; return; }
+            if (newP !== conf) { errEl.textContent = "Passwords do not match"; errEl.style.display = "block"; return; }
+            userPassword = newP;
+            errEl.style.display = "none";
+            closeModal('passwordModal');
+            showToast('Password changed successfully', 'success');
+            document.getElementById('passwordForm').reset();
+        });
+
+        // ========== ADMIN LOGIC (NEW) ==========
+
+
+
+        function renderAdminPage() {
+
+            document.getElementById('pendingCount').textContent = pendingBooks.length;
+            document.getElementById('totalBooksCount').textContent = booksData.length;
+
+            const list = document.getElementById('pendingBooksList');
+            if (pendingBooks.length === 0) {
+                list.innerHTML = '<div class="text-center text-[var(--text-muted)] p-8">No pending submissions.</div>';
+                return;
+            }
+
+            list.innerHTML = pendingBooks.map(b => `
+        <div class="card mb-4" style="padding:1.5rem;">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-semibold">${b.title}</h4>
+                    <p class="text-sm text-[var(--text-muted)]">by ${b.author} • ${b.genre}</p>
+                    <p class="text-xs text-[var(--text-secondary)] mt-2">${b.desc}</p>
+                    <p class="text-xs text-[var(--accent-primary)] mt-1">Submitted by: ${b.submittedBy}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-success btn-sm" onclick="approveBook(${b.id})">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectBook(${b.id})">Reject</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+        }
+
+        async function approveBook(id) {
+            try {
+                const response = await fetch(`http://127.0.0.1:3000/api/approve/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ approved_by: 1 })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Book approved and added to library!', 'success');
+                    loadBackendData();
+                } else {
+                    showToast('Failed to approve book.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error approving book.', 'error');
+            }
+        }
+
+        function rejectBook(id) {
+            const bookIndex = pendingBooks.findIndex(b => b.id === id);
+            if (bookIndex !== -1) {
+                pendingBooks.splice(bookIndex, 1);
+                renderAdminPage();
+                showToast('Book submission rejected.', 'error');
+            }
+        }
+
+        // Show List Modal
+        function showListModal(type) {
+            const title = document.getElementById('listModalTitle');
+            const content = document.getElementById('listModalContent');
+            let data = [];
+
+            if (type === 'read') {
+                title.textContent = 'Books Read';
+                data = userBooksRead.map(id => booksData.find(b => b.id === id)).filter(b => b !== undefined);
+            }
+            else if (type === 'liked') {
+                title.textContent = 'Books Liked';
+                data = userBooksLiked.map(id => booksData.find(b => b.id === id)).filter(b => b !== undefined);
+            }
+            else if (type === 'reviews') {
+                title.textContent = 'My Reviews';
+                const myReviews = reviewsData.filter(r => r.isCurrentUser);
+                content.innerHTML = myReviews.map(r => `<div class="list-item"><div><div class="font-medium">${r.bookTitle}</div><div class="text-xs text-[var(--text-muted)]">${r.rating} Stars</div></div></div>`).join('') || '<div class="text-center p-4 text-[var(--text-muted)]">No reviews yet</div>';
+                openModal('listModal');
+                return;
+            }
+
+            if (data.length === 0) {
+                const emptyMsg = type === 'read'
+                    ? 'No books marked as read yet.'
+                    : 'No liked books yet.';
+                content.innerHTML = `<div class="text-center p-8 text-[var(--text-muted)]">${emptyMsg}</div>`;
+            } else {
+                content.innerHTML = data.map(b => `<div class="list-item">
+            <div class="list-item-cover" style="background:linear-gradient(135deg, ${b.color}, ${b.color}88)"></div>
+            <div style="flex:1;">
+                <div class="font-medium">${b.title}</div>
+                <div class="text-xs text-[var(--text-muted)]">${b.author} • ${b.genre}</div>
+            </div>
+        </div>`).join('');
+            }
+            openModal('listModal');
+        }
+
+        // Submit Book Handler
+        document.getElementById('submitBookForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('submitTitle').value,
+                author: document.getElementById('submitAuthor').value,
+                genre: document.getElementById('submitGenre').value,
+                pdf_path: document.getElementById('submitLink').value || "pending.pdf",
+                uploaded_by: "User"
+            };
+            try {
+                const response = await fetch('http://127.0.0.1:3000/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if(result.success) {
+                    showToast('Book uploaded! Pending admin approval.', 'success');
+                    closeModal('submitBookModal');
+                    loadBackendData();
+                    e.target.reset();
+                } else {
+                    showToast('Failed to upload.', 'error');
+                }
+            } catch(err) {
+                showToast('Error uploading book.', 'error');
+            }
+        });
+
+        // Initialize
+        renderBooks();
+        renderReviews();
+        renderRecommendations();
+        setTimeout(loadBackendData, 500);
+
+        // ================= BACKEND CONNECTION =================
+        async function loadBackendData() {
+            try {
+                const booksRes = await fetch('http://127.0.0.1:3000/api/books');
+                const books = await booksRes.json();
+
+                if (books.success && books.data) {
+                    booksData = books.data.map(b => ({
+                        id: b.book_id,
+                        title: b.title,
+                        author: b.author,
+                        rating: b.rating || 0,
+                        genre: normalizeGenre(b.genre),
+                        color: "#3b82f6",
+                        desc: b.description || "No description available.",
+                        stats: { wantToRead: 0, currentlyReading: 0, haveRead: 0 },
+                        details: {
+                            publisher: b.publisher || "Unknown",
+                            year: b.published_year || 2000,
+                            pages: b.pages || 100,
+                            language: b.language || "English",
+                            editions: 1
+                        },
+                        readLink: b.pdf_path
+                    }));
+                }
+
+                const reviewsRes = await fetch('http://127.0.0.1:3000/api/reviews/1');
+                const reviews = await reviewsRes.json();
+
+                if (reviews.success && reviews.data) {
+                    reviewsData = reviews.data.map(r => ({
+                        id: r.id,
+                        bookId: r.book_id,
+                        bookTitle: booksData.find(b => b.id === r.book_id)?.title || "Book",
+                        reviewer: r.reviewer_name,
+                        rating: r.rating,
+                        title: "Review",
+                        text: r.review_text,
+                        date: "Recently",
+                        isCurrentUser: false
+                    }));
+                }
+
+                const pendingRes = await fetch('http://127.0.0.1:3000/api/pending');
+                const pending = await pendingRes.json();
+                if (pending.success && pending.data) {
+                    pendingBooks = pending.data.map(b => ({
+                        id: b.book_id,
+                        title: b.title,
+                        author: b.author,
+                        genre: b.genre,
+                        desc: b.description || "Pending Approval",
+                        submittedBy: b.uploaded_by || "User",
+                        color: "#3b82f6"
+                    }));
+                }
+                renderAdminPage();
+
+                // Dynamically add genre filter buttons
+                const existingGenres = new Set(['All', 'Fiction', 'Non-Fiction', 'Mystery', 'Sci-Fi', 'Thriller', 'Self-Help']);
+                const backendGenres = [...new Set(booksData.map(b => b.genre))];
+                const genreFiltersEl = document.getElementById('genreFilters');
+                backendGenres.forEach(genre => {
+                    if (!existingGenres.has(genre)) {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-secondary';
+                        btn.textContent = genre;
+                        btn.setAttribute('onclick', `filterBooks('${genre}')`);
+                        genreFiltersEl.appendChild(btn);
+                        existingGenres.add(genre);
+                    }
+                });
+
+                renderBooks();
+                renderReviews();
+                updateUI();
+
+            } catch (err) {
+                console.log("Backend connection error:", err);
+            }
+        }
+    </script>
+</body>
+
+</html>
