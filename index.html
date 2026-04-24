@@ -2418,8 +2418,8 @@
                 const booksRes = await fetch('http://127.0.0.1:3000/api/books');
                 const books = await booksRes.json();
 
-                if (books.success && books.data) {
-                    booksData = books.data.map(b => ({
+                if (books.success && books.data && books.data.length > 0) {
+                    const dbBooks = books.data.map(b => ({
                         id: b.book_id,
                         title: b.title,
                         author: b.author,
@@ -2437,6 +2437,10 @@
                         },
                         readLink: b.pdf_path
                     }));
+                    
+                    // Filter out any dbBooks that already exist in booksData by title to prevent duplicates
+                    const newBooks = dbBooks.filter(dbB => !booksData.some(b => b.title === dbB.title));
+                    booksData = [...booksData, ...newBooks];
                 }
 
                 const reviewsRes = await fetch('http://127.0.0.1:3000/api/reviews/1');
