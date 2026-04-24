@@ -57,8 +57,8 @@ $RECYCLE.BIN/
 # ===========================
 #  PDF Book Files (large assets)
 # ===========================
-bookworm-books/
-bookworm_books/
+
+
 
 # ===========================
 #  Temp / Misc
