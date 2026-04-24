@@ -930,8 +930,7 @@
 
                 <!-- Admin Link -->
                 <div class="nav-section-title">Administration</div>
-                <button class="nav-link" onclick="navigateTo('admin')"><svg
-                        viewBox="0 0 24 24">
+                <button class="nav-link" onclick="navigateTo('admin')"><svg viewBox="0 0 24 24">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>Admin Panel</button>
 
@@ -2377,7 +2376,7 @@
         }
 
         // Submit Book Handler
-        document.getElementById('submitBookForm').addEventListener('submit', async function(e) {
+        document.getElementById('submitBookForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const payload = {
                 title: document.getElementById('submitTitle').value,
@@ -2393,7 +2392,7 @@
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
-                if(result.success) {
+                if (result.success) {
                     showToast('Book uploaded! Pending admin approval.', 'success');
                     closeModal('submitBookModal');
                     loadBackendData();
@@ -2401,7 +2400,7 @@
                 } else {
                     showToast('Failed to upload.', 'error');
                 }
-            } catch(err) {
+            } catch (err) {
                 showToast('Error uploading book.', 'error');
             }
         });
@@ -2437,7 +2436,7 @@
                         },
                         readLink: b.pdf_path
                     }));
-                    
+
                     // Filter out any dbBooks that already exist in booksData by title to prevent duplicates
                     const newBooks = dbBooks.filter(dbB => !booksData.some(b => b.title === dbB.title));
                     booksData = [...booksData, ...newBooks];
@@ -2490,13 +2489,14 @@
                     }
                 });
 
-                renderBooks();
-                renderReviews();
-                updateUI();
-
             } catch (err) {
                 console.log("Backend connection error:", err);
             }
+
+            // ALWAYS render, even if backend fails, so hardcoded books are visible
+            renderBooks();
+            renderReviews();
+            updateUI();
         }
     </script>
 </body>
