@@ -1744,10 +1744,10 @@
 
 
         function loginUser() {
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
             document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
             document.getElementById('appShell').classList.add('active');
 
-            // NEW: Show/Hide Admin Elements based on role
             if (currentUser.isAdmin) {
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex' || 'block');
             } else {
@@ -1756,18 +1756,19 @@
 
             updateUI();
             renderBooks();
+            renderReviews();
+            renderRecommendations();
             showToast('Welcome, ' + currentUser.name + '!', 'success');
             navigateTo('dashboard');
         }
 
         function logout() {
+            localStorage.removeItem('currentUser');
             currentUser = null;
             userBooksRead = [];
             userBooksLiked = [];
             userReadingList = [];
-            // Hide admin elements
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-
             document.getElementById('appShell').classList.remove('active');
             showAuthPage('login');
             showToast('Logged out', 'success');
@@ -2395,9 +2396,15 @@
         });
 
         // Initialize
-        renderBooks();
-        renderReviews();
-        renderRecommendations();
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            loginUser();
+        } else {
+            renderBooks();
+            renderReviews();
+            renderRecommendations();
+        }
         setTimeout(loadBackendData, 500);
 
         // ================= BACKEND CONNECTION =================
